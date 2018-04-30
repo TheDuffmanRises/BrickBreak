@@ -1,0 +1,84 @@
+var _user$project$BrickBreak$view = function (m) {
+	return A2(
+		_user$project$Game_TwoD$renderCentered,
+		{
+			time: 0,
+			camera: A2(
+				_user$project$Game_TwoD_Camera$fixedHeight,
+				20,
+				{ctor: '_Tuple2', _0: 0, _1: 1.5}),
+			size: {ctor: '_Tuple2', _0: 800, _1: 600}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_user$project$Game_TwoD_Render$shape,
+				_user$project$Game_TwoD_Render$rectangle,
+				{
+					color: _elm_lang$core$Color$green,
+					position: {ctor: '_Tuple2', _0: -1.5, _1: -1},
+					size: {ctor: '_Tuple2', _0: 3, _1: 1}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_user$project$Game_TwoD_Render$shape,
+					_user$project$Game_TwoD_Render$circle,
+					{
+						color: _elm_lang$core$Color$blue,
+						position: m.position,
+						size: {ctor: '_Tuple2', _0: 0.5, _1: 0.5}
+					}),
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _user$project$BrickBreak$init = A2(
+	_elm_lang$core$Platform_Cmd_ops['!'],
+	{
+		position: {ctor: '_Tuple2', _0: 0, _1: 4},
+		velocity: {ctor: '_Tuple2', _0: 0, _1: 6}
+	},
+	{ctor: '[]'});
+var _user$project$BrickBreak$Model = F2(
+	function (a, b) {
+		return {position: a, velocity: b};
+	});
+var _user$project$BrickBreak$tick = F2(
+	function (dt, _p0) {
+		var _p1 = _p0;
+		var _p2 = {ctor: '_Tuple2', _0: _p1.position, _1: _p1.velocity};
+		var x = _p2._0._0;
+		var y = _p2._0._1;
+		var vx = _p2._1._0;
+		var vy = _p2._1._1;
+		var vy_ = vy - (9.81 * dt);
+		var _p3 = (_elm_lang$core$Native_Utils.cmp(y, 0) < 1) ? {
+			ctor: '_Tuple2',
+			_0: {ctor: '_Tuple2', _0: x, _1: 1.0e-5},
+			_1: {ctor: '_Tuple2', _0: 0, _1: (0 - vy_) * 0.9}
+		} : {
+			ctor: '_Tuple2',
+			_0: {ctor: '_Tuple2', _0: x, _1: y + (vy_ * dt)},
+			_1: {ctor: '_Tuple2', _0: 0, _1: vy_}
+		};
+		var newP = _p3._0;
+		var newV = _p3._1;
+		return A2(_user$project$BrickBreak$Model, newP, newV);
+	});
+var _user$project$BrickBreak$update = F2(
+	function (msg, model) {
+		var _p4 = msg;
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			A2(_user$project$BrickBreak$tick, _p4._0 / 1000, model),
+			{ctor: '[]'});
+	});
+var _user$project$BrickBreak$Tick = function (a) {
+	return {ctor: 'Tick', _0: a};
+};
+var _user$project$BrickBreak$subs = function (m) {
+	return _elm_lang$animation_frame$AnimationFrame$diffs(_user$project$BrickBreak$Tick);
+};
+var _user$project$BrickBreak$main = _elm_lang$html$Html$program(
+	{view: _user$project$BrickBreak$view, update: _user$project$BrickBreak$update, init: _user$project$BrickBreak$init, subscriptions: _user$project$BrickBreak$subs})();
