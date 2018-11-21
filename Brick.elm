@@ -1,79 +1,138 @@
 module BrickBreak exposing (..)
 
-import Color
 import Html exposing (..)
+import Keyboard exposing (KeyCode)
+import Time exposing (Time)
+import Key exposing (..)
 import AnimationFrame
 
---
-
-import Game.TwoD.Camera as Camera exposing (Camera)
-import Game.TwoD.Render as Render exposing (Renderable, rectangle, circle)
-import Game.TwoD as Game
 
 -- MAIN
+
+
 main : Program Never Model Msg
 main =
     program
         { view = view
         , update = update
         , init = init
-        , subscriptions = subs
+        , subscriptions = subscriptions
         }
 
 
+
 -- MODEL
+
+
 type alias Model =
-  { position : ( Float, Float )
-  , velocity : ( Float, Float )
-  }
+    { position : Float
+    , velocity : Float
+    , shotsFired : Int
+    }
 
 
-type Msg
-  = Tick Float
+model : Model
+model =
+    { velocity = 0
+    , position = 0
+    , shotsFired = 0
+    }
+
 
 
 -- INIT
+
+
 init : ( Model, Cmd Msg )
 init =
-  { position = ( 0, 4 )
-  , velocity = ( 0, 6 )
-  }
-      ! []
+    ( model, Cmd.none )
 
 
--- SUBSCRIPTIONS
-subs m =
-    AnimationFrame.diffs Tick
+
+-- SUBSCRIPTIONS..
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ AnimationFrame.diffs TimeUpdate
+        , Keyboard.downs KeyDown
+        , Keyboard.ups KeyUp
+        ]
+
+
 
 -- UPDATE
+
+
+type Msg
+    = TimeUpdate Time
+    | KeyDown KeyCode
+    | KeyUp KeyCode
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Tick dt ->
-            tick (dt / 1000) model ! []
+        TimeUpdate dt ->
+            ( applyPhysics dt model, Cmd.none )
+
+        KeyDown keyCode ->
+            ( keyDown keyCode model, Cmd.none )
+
+        KeyUp keyCode ->
+            ( keyUp keyCode model, Cmd.none )
 
 
-tick dt { position, velocity } =
-    let
-        ( ( x, y ), ( vx, vy ) ) =
-            ( position, velocity )
+keyDown : KeyCode -> Model -> Model
+keyDown keyCode model =
+    case Key.fromCode keyCode of
+        Space ->
+            incrementShotsFired model
 
-        vy_ =
-            vy - 9.81 * dt
+        ArrowLeft ->
+            updateVelocity -1.0 model
 
-        ( newP, newV ) =
-            if y <= 0 then
-                ( ( x, 0.00001 ), ( 0, -vy_ * 0.9 ) )
-            else
-                ( ( x, y + vy_ * dt ), ( 0, vy_ ) )
-    in
-        Model newP newV
+        ArrowRight ->
+            updateVelocity 1.0 model
+
+        _ ->
+            model
 
 
--- VIEW
+keyUp : KeyCode -> Model -> Model
+keyUp keyCode model =
+    case Key.fromCode keyCode of
+        ArrowLeft ->
+            updateVelocity 0 model
 
-view : Model -> Html Msg
-view m =
-    Game.renderCentered { time = 0, camera = Camera.fixedHeight 20 ( 0, 1.5 ), size = ( 800, 600 ) }
-        [ Render.shape rectangle { color = Color.green, position = ( -1.5, -1 ), size = ( 3, 1 ) }
-        , Render.shape circle { color = Color.blue, position = m.position, size = ( 0.5, 0.5 ) }
-        ]
+        ArrowRight ->
+            updateVelocity 0 model
+
+        _ ->
+            model
+
+
+applyPhysics : Float -> Model -> Model
+applyPhysics dt model =
+    { model | position = model.position + model.velocity * dt }
+
+
+updateVelocity : Float -> Model -> Model
+updateVelocity newVelocity model =
+    { model | velocity = newVelocity }
+
+
+incrementShotsFired : Model -> Model
+incrementShotsFired model =
+    { model | shotsFired = model.shotsFired + 1 }
+
+
+
+--VIEW
+
+
+view : Model -> Html msg
+view model =
+    text
+        (toString model)
